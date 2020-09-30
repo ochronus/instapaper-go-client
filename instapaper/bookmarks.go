@@ -38,7 +38,7 @@ type BookmarkListRequestParams struct {
 var DefaultBookmarkListRequestParams = BookmarkListRequestParams{
 	Limit:  500,
 	Skip:   nil,
-	Folder: FOLDER_ID_UNREAD,
+	Folder: FolderIDUnread,
 }
 
 type BookmarkService interface {
