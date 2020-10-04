@@ -6,8 +6,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-
-	"github.com/gomodule/oauth1/oauth"
 )
 
 // Bookmark represents a single bookmark entry
@@ -31,27 +29,33 @@ type BookmarkListResponse struct {
 	RawResponse string
 }
 
+// BookmarkListRequestParams defines filtering and limiting options for the List endpoint.
+// see DefaultBookmarkListRequestParams for a set of sane defaults
 type BookmarkListRequestParams struct {
 	Limit  int
 	Skip   []Bookmark
 	Folder string
 }
 
+// DefaultBookmarkListRequestParams provides sane defaults - no filtering and the maximum limit of 500 bookmarks
 var DefaultBookmarkListRequestParams = BookmarkListRequestParams{
 	Limit:  500,
 	Skip:   nil,
 	Folder: FolderIDUnread,
 }
 
+// BookmarkService defines the interface for all bookmark related API operations
 type BookmarkService interface {
 	List(BookmarkListRequestParams) ([]Bookmark, error)
 }
 
+// BookmarkServiceOp is the implementation of the bookmark related parts of the API client, conforming to the BookmarkService interface
 type BookmarkServiceOp struct {
-	Client      oauth.Client
-	Credentials *oauth.Credentials
+	Client Client
 }
 
+// List returns the list of bookmarks. By default it returns (maximum) 500 of the unread bookmarks
+// see BookmarkListRequestParams for filtering options
 func (svc *BookmarkServiceOp) List(p BookmarkListRequestParams) (*BookmarkListResponse, error) {
 	params := url.Values{}
 	params.Set("limit", strconv.Itoa(p.Limit))
@@ -60,7 +64,8 @@ func (svc *BookmarkServiceOp) List(p BookmarkListRequestParams) (*BookmarkListRe
 		haveList = append(haveList, strconv.Itoa(bookmark.ID))
 	}
 	params.Set("have", strings.Join(haveList, ","))
-	res, err := svc.Client.Post(nil, svc.Credentials, "https://www.instapaper.com/api/1.1/bookmarks/list", params)
+	url := svc.Client.BaseURL + "/bookmarks/list"
+	res, err := svc.Client.OAuthClient.Post(nil, svc.Client.Credentials, url, params)
 	if err == nil {
 		var bookmarkList BookmarkListResponse
 		bodyBytes, err := ioutil.ReadAll(res.Body)
@@ -71,7 +76,9 @@ func (svc *BookmarkServiceOp) List(p BookmarkListRequestParams) (*BookmarkListRe
 		bookmarkList.RawResponse = bodyString
 		err = json.Unmarshal([]byte(bodyString), &bookmarkList)
 		if err != nil {
-			return &BookmarkListResponse{}, err
+			return &BookmarkListResponse{
+				RawResponse: bodyString,
+			}, err
 		}
 		return &bookmarkList, nil
 	}
