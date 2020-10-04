@@ -1,7 +1,6 @@
 package instapaper
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -13,7 +12,6 @@ import (
 
 var (
 	mux    *http.ServeMux
-	ctx    = context.TODO()
 	client Client
 	server *httptest.Server
 )
