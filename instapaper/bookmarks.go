@@ -2,6 +2,7 @@ package instapaper
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/url"
 	"strconv"
 	"strings"
@@ -25,8 +26,9 @@ type Bookmark struct {
 
 // BookmarkListResponse represents the useful part of the API response for the bookmark list endpoint
 type BookmarkListResponse struct {
-	Bookmarks  []Bookmark
-	Highlights []Highlight
+	Bookmarks   []Bookmark
+	Highlights  []Highlight
+	RawResponse string
 }
 
 type BookmarkListRequestParams struct {
@@ -61,7 +63,13 @@ func (svc *BookmarkServiceOp) List(p BookmarkListRequestParams) (*BookmarkListRe
 	res, err := svc.Client.Post(nil, svc.Credentials, "https://www.instapaper.com/api/1.1/bookmarks/list", params)
 	if err == nil {
 		var bookmarkList BookmarkListResponse
-		err := json.NewDecoder(res.Body).Decode(&bookmarkList)
+		bodyBytes, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return &BookmarkListResponse{}, err
+		}
+		bodyString := string(bodyBytes)
+		bookmarkList.RawResponse = bodyString
+		err = json.Unmarshal([]byte(bodyString), &bookmarkList)
 		if err != nil {
 			return &BookmarkListResponse{}, err
 		}
