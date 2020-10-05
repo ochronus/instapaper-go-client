@@ -2,10 +2,12 @@ package instapaper
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Bookmark represents a single bookmark entry
@@ -16,8 +18,8 @@ type Bookmark struct {
 	PrivateSource     string `json:"private_source"`
 	Title             string
 	URL               string
-	ProgressTimestamp int `json:"progress_timestamp"`
-	Time              int
+	ProgressTimestamp int64 `json:"progress_timestamp"`
+	Time              int64
 	Progress          float32
 	Starred           string
 }
@@ -56,6 +58,7 @@ type bookmarkService interface {
 	UnArchive(int) error
 	DeletePermanently(int) error
 	Move(int, string) error
+	UpdateReadProgress(int, float32, int64)
 }
 
 // BookmarkServiceOp is the implementation of the bookmark related parts of the API client, conforming to the BookmarkService interface
@@ -177,5 +180,20 @@ func (svc *BookmarkServiceOp) Move(bookmarkID int, folderID string) error {
 	params.Set("bookmark_id", strconv.Itoa(bookmarkID))
 	params.Set("folder_id", folderID)
 	_, err := svc.Client.Call("/bookmarks/move", params)
+	return err
+}
+
+// UpdateReadProgress updates the read progress on the bookmark
+// progress is between 0.0 and 1.0 - a percentage
+// when - Unix timestamp - optionally specify when the update happened. If it's set to 0 the current timestamp is used.
+func (svc *BookmarkServiceOp) UpdateReadProgress(bookmarkID int, progress float32, when int64) error {
+	if when == 0 {
+		when = time.Now().Unix()
+	}
+	params := url.Values{}
+	params.Set("bookmark_id", strconv.Itoa(bookmarkID))
+	params.Set("progress_timestamp", strconv.FormatInt(when, 10))
+	params.Set("progress", fmt.Sprintf("%f", progress))
+	_, err := svc.Client.Call("/bookmarks/update_read_progress", params)
 	return err
 }
