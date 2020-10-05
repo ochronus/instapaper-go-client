@@ -1,6 +1,11 @@
 package instapaper
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
+	"net/url"
+
 	"github.com/gomodule/oauth1/oauth"
 )
 
@@ -45,4 +50,40 @@ func (svc *Client) Authenticate() error {
 	}
 	svc.Credentials = credentials
 	return nil
+}
+
+// Call makes a call to the Instapaper API on the specific path with the given call parameters. It handles errors converting them to an APIError instance
+func (svc *Client) Call(path string, params url.Values) (*http.Response, error) {
+	if svc.Credentials == nil {
+		return nil, &APIError{
+			Message:   "Please call Authenticate() first",
+			ErrorCode: ErrNotAuthenticated,
+		}
+	}
+	res, err := svc.OAuthClient.Post(nil, svc.Credentials, svc.BaseURL+path, params)
+	if err == nil && res.StatusCode == 200 {
+		return res, nil
+	}
+	var apiError []APIError
+	bodyBytes, err := ioutil.ReadAll(res.Body)
+	// there was a "low level" http error
+	if err != nil {
+		return nil, &APIError{
+			StatusCode:   res.StatusCode,
+			Message:      err.Error(),
+			ErrorCode:    ErrHTTPError,
+			WrappedError: err,
+		}
+	}
+	err = json.Unmarshal(bodyBytes, &apiError)
+	if err != nil {
+		return nil, &APIError{
+			StatusCode:   res.StatusCode,
+			Message:      err.Error(),
+			ErrorCode:    ErrUnmarshalError,
+			WrappedError: err,
+		}
+	}
+	apiError[0].StatusCode = res.StatusCode
+	return nil, &apiError[0]
 }
