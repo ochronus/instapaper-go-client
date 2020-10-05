@@ -32,16 +32,18 @@ type BookmarkListResponse struct {
 // BookmarkListRequestParams defines filtering and limiting options for the List endpoint.
 // see DefaultBookmarkListRequestParams for a set of sane defaults
 type BookmarkListRequestParams struct {
-	Limit  int
-	Skip   []Bookmark
-	Folder string
+	Limit           int
+	Skip            []Bookmark
+	CustomHaveParam string
+	Folder          string
 }
 
 // DefaultBookmarkListRequestParams provides sane defaults - no filtering and the maximum limit of 500 bookmarks
 var DefaultBookmarkListRequestParams = BookmarkListRequestParams{
-	Limit:  500,
-	Skip:   nil,
-	Folder: FolderIDUnread,
+	Limit:           500,
+	Skip:            nil,
+	CustomHaveParam: "",
+	Folder:          FolderIDUnread,
 }
 
 // BookmarkService defines the interface for all bookmark related API operations
@@ -59,11 +61,15 @@ type BookmarkServiceOp struct {
 func (svc *BookmarkServiceOp) List(p BookmarkListRequestParams) (*BookmarkListResponse, error) {
 	params := url.Values{}
 	params.Set("limit", strconv.Itoa(p.Limit))
-	var haveList []string
-	for _, bookmark := range p.Skip {
-		haveList = append(haveList, strconv.Itoa(bookmark.ID))
+	if p.CustomHaveParam != "" {
+		params.Set("have", p.CustomHaveParam)
+	} else {
+		var haveList []string
+		for _, bookmark := range p.Skip {
+			haveList = append(haveList, strconv.Itoa(bookmark.ID))
+		}
+		params.Set("have", strings.Join(haveList, ","))
 	}
-	params.Set("have", strings.Join(haveList, ","))
 	url := svc.Client.BaseURL + "/bookmarks/list"
 	res, err := svc.Client.OAuthClient.Post(nil, svc.Client.Credentials, url, params)
 	if err == nil {

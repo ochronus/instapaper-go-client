@@ -2,6 +2,10 @@ site_name: instapaper-go-client
 theme:
     name: readthedocs
     nav_style: dark
+    highlightjs: true
+    hljs_languages:
+        - go
+
 nav:
     - Home: index.md
-    - About: about.md
+    - Bookmarks: bookmarks.md

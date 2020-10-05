@@ -6,8 +6,6 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"testing"
-
-	"github.com/gomodule/oauth1/oauth"
 )
 
 var (
@@ -20,7 +18,7 @@ func setup() {
 	mux = http.NewServeMux()
 	server = httptest.NewServer(mux)
 
-	client, _ = NewClient(oauth.Client{}, &oauth.Credentials{})
+	client, _ = NewClient("", "", "", "")
 	client.BaseURL = server.URL
 }
 
