@@ -19,7 +19,7 @@ type Bookmark struct {
 	Title             string
 	URL               string
 	ProgressTimestamp int64 `json:"progress_timestamp"`
-	Time              int64
+	Time              float32
 	Progress          float32
 	Starred           string
 }
@@ -48,6 +48,18 @@ var DefaultBookmarkListRequestParams = BookmarkListRequestParams{
 	Folder:          FolderIDUnread,
 }
 
+// BookmarkAddRequestParams represents all the parameters you can pass when adding a new bookmark
+// Either URL or Content or a (Content, PrivateSourceName) pair is mandatory.
+type BookmarkAddRequestParams struct {
+	URL               string
+	Title             string
+	Description       string
+	Folder            string
+	ResolveFinalURL   bool
+	Content           string
+	PrivateSourceName string
+}
+
 // BookmarkService defines the interface for all bookmark related API operations
 type bookmarkService interface {
 	List(BookmarkListRequestParams) ([]Bookmark, error)
@@ -59,6 +71,7 @@ type bookmarkService interface {
 	DeletePermanently(int) error
 	Move(int, string) error
 	UpdateReadProgress(int, float32, int64)
+	Add(BookmarkAddRequestParams) (Bookmark, error)
 }
 
 // BookmarkServiceOp is the implementation of the bookmark related parts of the API client, conforming to the BookmarkService interface
@@ -196,4 +209,52 @@ func (svc *BookmarkServiceOp) UpdateReadProgress(bookmarkID int, progress float3
 	params.Set("progress", fmt.Sprintf("%f", progress))
 	_, err := svc.Client.Call("/bookmarks/update_read_progress", params)
 	return err
+}
+
+// Add adds a new bookmark from the specified URL
+func (svc *BookmarkServiceOp) Add(p BookmarkAddRequestParams) (*Bookmark, error) {
+	params := url.Values{}
+	params.Set("url", p.URL)
+	if p.Description != "" {
+		params.Set("description", p.Description)
+	}
+	if p.Title != "" {
+		params.Set("title", p.Title)
+	}
+	if p.Folder != "" {
+		params.Set("folder_id", p.Folder)
+	}
+	if !p.ResolveFinalURL {
+		params.Set("resolve_final_url", "0")
+	}
+	if p.Content != "" {
+		params.Set("content", p.Content)
+	}
+	if p.PrivateSourceName != "" {
+		params.Set("is_private_from_source", p.PrivateSourceName)
+	}
+	res, err := svc.Client.Call("/bookmarks/add", params)
+	if err != nil {
+		return nil, err
+	}
+	var bookmark []Bookmark
+	bodyBytes, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, &APIError{
+			StatusCode:   res.StatusCode,
+			Message:      err.Error(),
+			ErrorCode:    ErrHTTPError,
+			WrappedError: err,
+		}
+	}
+	err = json.Unmarshal(bodyBytes, &bookmark)
+	if err != nil {
+		return nil, &APIError{
+			StatusCode:   res.StatusCode,
+			Message:      err.Error(),
+			ErrorCode:    ErrUnmarshalError,
+			WrappedError: err,
+		}
+	}
+	return &bookmark[0], nil
 }
