@@ -1,7 +1,0 @@
-site_name: instapaper-go-client
-theme:
-    name: readthedocs
-    nav_style: dark
-nav:
-    - Home: index.md
-    - About: about.md

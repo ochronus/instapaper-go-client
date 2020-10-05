@@ -43,9 +43,8 @@ func (svc *FolderServiceOp) List() ([]Folder, error) {
 		err := json.NewDecoder(res.Body).Decode(&folderList)
 		if err != nil {
 			return nil, err
-		} else {
-			return folderList, nil
 		}
+		return folderList, nil
 	} else {
 		return nil, err
 	}
