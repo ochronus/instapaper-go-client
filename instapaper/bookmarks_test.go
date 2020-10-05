@@ -6,12 +6,18 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/gomodule/oauth1/oauth"
 )
 
 var (
-	mux    *http.ServeMux
-	client Client
-	server *httptest.Server
+	mux                *http.ServeMux
+	client             Client
+	server             *httptest.Server
+	defaultCredentials = &oauth.Credentials{
+		Token:  "Yolo",
+		Secret: "Yolo",
+	}
 )
 
 func setup() {
@@ -20,10 +26,26 @@ func setup() {
 
 	client, _ = NewClient("", "", "", "")
 	client.BaseURL = server.URL
+	client.Credentials = defaultCredentials
 }
 
 func teardown() {
 	server.Close()
+}
+
+func TestWithoutAuthentication(t *testing.T) {
+	setup()
+	defer teardown()
+	client.Credentials = nil
+	mux.HandleFunc("/bookmarks/list", func(w http.ResponseWriter, r *http.Request) {
+	})
+	svc := BookmarkServiceOp{
+		Client: client,
+	}
+	_, err := svc.List(DefaultBookmarkListRequestParams)
+	if err == nil {
+		t.Errorf("expected err NOT to be nil, got %v", err)
+	}
 }
 
 func TestBogusValidResponse(t *testing.T) {

@@ -2,6 +2,7 @@ package instapaper
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/url"
 	"strconv"
@@ -59,6 +60,9 @@ type BookmarkServiceOp struct {
 // List returns the list of bookmarks. By default it returns (maximum) 500 of the unread bookmarks
 // see BookmarkListRequestParams for filtering options
 func (svc *BookmarkServiceOp) List(p BookmarkListRequestParams) (*BookmarkListResponse, error) {
+	if svc.Client.Credentials == nil {
+		return nil, errors.New("Please call Authenticate() on the client first")
+	}
 	params := url.Values{}
 	params.Set("limit", strconv.Itoa(p.Limit))
 	if p.CustomHaveParam != "" {
