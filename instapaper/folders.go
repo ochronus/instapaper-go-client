@@ -45,7 +45,6 @@ func (svc *FolderServiceOp) List() ([]Folder, error) {
 			return nil, err
 		}
 		return folderList, nil
-	} else {
-		return nil, err
 	}
+	return nil, err
 }
