@@ -2,7 +2,6 @@ package instapaper
 
 import (
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"net/url"
 	"strconv"
@@ -60,9 +59,6 @@ type BookmarkServiceOp struct {
 // List returns the list of bookmarks. By default it returns (maximum) 500 of the unread bookmarks
 // see BookmarkListRequestParams for filtering options
 func (svc *BookmarkServiceOp) List(p BookmarkListRequestParams) (*BookmarkListResponse, error) {
-	if svc.Client.Credentials == nil {
-		return nil, errors.New("Please call Authenticate() on the client first")
-	}
 	params := url.Values{}
 	params.Set("limit", strconv.Itoa(p.Limit))
 	if p.CustomHaveParam != "" {
@@ -74,23 +70,56 @@ func (svc *BookmarkServiceOp) List(p BookmarkListRequestParams) (*BookmarkListRe
 		}
 		params.Set("have", strings.Join(haveList, ","))
 	}
-	url := svc.Client.BaseURL + "/bookmarks/list"
-	res, err := svc.Client.OAuthClient.Post(nil, svc.Client.Credentials, url, params)
-	if err == nil {
+
+	res, err := svc.Client.Call("/bookmarks/list", params)
+	if err != nil {
+		return &BookmarkListResponse{}, err
+	} else {
 		var bookmarkList BookmarkListResponse
 		bodyBytes, err := ioutil.ReadAll(res.Body)
 		if err != nil {
-			return &BookmarkListResponse{}, err
+			return nil, &APIError{
+				StatusCode:   res.StatusCode,
+				Message:      err.Error(),
+				ErrorCode:    ErrHTTPError,
+				WrappedError: err,
+			}
 		}
 		bodyString := string(bodyBytes)
 		bookmarkList.RawResponse = bodyString
 		err = json.Unmarshal([]byte(bodyString), &bookmarkList)
 		if err != nil {
 			return &BookmarkListResponse{
-				RawResponse: bodyString,
-			}, err
+					RawResponse: bodyString,
+				}, &APIError{
+					StatusCode:   res.StatusCode,
+					Message:      err.Error(),
+					ErrorCode:    ErrUnmarshalError,
+					WrappedError: err,
+				}
 		}
 		return &bookmarkList, nil
 	}
-	return nil, err
+
+}
+
+// GetText returns the specified bookmark's processed text-view HTML, which is always text/html encoded as UTF-8.
+func (svc *BookmarkServiceOp) GetText(bookmarkID int) (string, error) {
+	params := url.Values{}
+	params.Set("bookmark_id", strconv.Itoa(bookmarkID))
+	res, err := svc.Client.Call("/bookmarks/get_text", params)
+	if err != nil {
+		return "", err
+	} else {
+		bodyBytes, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return "", &APIError{
+				StatusCode:   res.StatusCode,
+				Message:      err.Error(),
+				ErrorCode:    ErrHTTPError,
+				WrappedError: err,
+			}
+		}
+		return string(bodyBytes), nil
+	}
 }
