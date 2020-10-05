@@ -47,8 +47,15 @@ var DefaultBookmarkListRequestParams = BookmarkListRequestParams{
 }
 
 // BookmarkService defines the interface for all bookmark related API operations
-type BookmarkService interface {
+type bookmarkService interface {
 	List(BookmarkListRequestParams) ([]Bookmark, error)
+	GetText(int) (string, error)
+	Star(int) error
+	UnStar(int) error
+	Archive(int) error
+	UnArchive(int) error
+	DeletePermanently(int) error
+	Move(int, string) error
 }
 
 // BookmarkServiceOp is the implementation of the bookmark related parts of the API client, conforming to the BookmarkService interface
@@ -122,4 +129,53 @@ func (svc *BookmarkServiceOp) GetText(bookmarkID int) (string, error) {
 		}
 		return string(bodyBytes), nil
 	}
+}
+
+// Star stars the specified bookmark
+func (svc *BookmarkServiceOp) Star(bookmarkID int) error {
+	params := url.Values{}
+	params.Set("bookmark_id", strconv.Itoa(bookmarkID))
+	_, err := svc.Client.Call("/bookmarks/star", params)
+	return err
+}
+
+// UnStar un-stars the specified bookmark
+func (svc *BookmarkServiceOp) UnStar(bookmarkID int) error {
+	params := url.Values{}
+	params.Set("bookmark_id", strconv.Itoa(bookmarkID))
+	_, err := svc.Client.Call("/bookmarks/unstar", params)
+	return err
+}
+
+// Archive archives the specified bookmark
+func (svc *BookmarkServiceOp) Archive(bookmarkID int) error {
+	params := url.Values{}
+	params.Set("bookmark_id", strconv.Itoa(bookmarkID))
+	_, err := svc.Client.Call("/bookmarks/archive", params)
+	return err
+}
+
+// UnArchive un-archives the specified bookmark
+func (svc *BookmarkServiceOp) UnArchive(bookmarkID int) error {
+	params := url.Values{}
+	params.Set("bookmark_id", strconv.Itoa(bookmarkID))
+	_, err := svc.Client.Call("/bookmarks/unarchive", params)
+	return err
+}
+
+// DeletePermanently PERMANENTLY deletes the specified bookmark
+func (svc *BookmarkServiceOp) DeletePermanently(bookmarkID int) error {
+	params := url.Values{}
+	params.Set("bookmark_id", strconv.Itoa(bookmarkID))
+	_, err := svc.Client.Call("/bookmarks/delete", params)
+	return err
+}
+
+// Move moves the specified bookmark to the specified folder
+func (svc *BookmarkServiceOp) Move(bookmarkID int, folderID string) error {
+	params := url.Values{}
+	params.Set("bookmark_id", strconv.Itoa(bookmarkID))
+	params.Set("folder_id", folderID)
+	_, err := svc.Client.Call("/bookmarks/move", params)
+	return err
 }
