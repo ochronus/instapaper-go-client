@@ -60,28 +60,14 @@ type BookmarkAddRequestParams struct {
 	PrivateSourceName string
 }
 
-// BookmarkService defines the interface for all bookmark related API operations
-type bookmarkService interface {
-	List(BookmarkListRequestParams) ([]Bookmark, error)
-	GetText(int) (string, error)
-	Star(int) error
-	UnStar(int) error
-	Archive(int) error
-	UnArchive(int) error
-	DeletePermanently(int) error
-	Move(int, string) error
-	UpdateReadProgress(int, float32, int64)
-	Add(BookmarkAddRequestParams) (Bookmark, error)
-}
-
-// BookmarkServiceOp is the implementation of the bookmark related parts of the API client, conforming to the BookmarkService interface
-type BookmarkServiceOp struct {
+// BookmarkService is the implementation of the bookmark related parts of the API client, conforming to the BookmarkService interface
+type BookmarkService struct {
 	Client Client
 }
 
 // List returns the list of bookmarks. By default it returns (maximum) 500 of the unread bookmarks
 // see BookmarkListRequestParams for filtering options
-func (svc *BookmarkServiceOp) List(p BookmarkListRequestParams) (*BookmarkListResponse, error) {
+func (svc *BookmarkService) List(p BookmarkListRequestParams) (*BookmarkListResponse, error) {
 	params := url.Values{}
 	params.Set("limit", strconv.Itoa(p.Limit))
 	if p.CustomHaveParam != "" {
@@ -127,7 +113,7 @@ func (svc *BookmarkServiceOp) List(p BookmarkListRequestParams) (*BookmarkListRe
 }
 
 // GetText returns the specified bookmark's processed text-view HTML, which is always text/html encoded as UTF-8.
-func (svc *BookmarkServiceOp) GetText(bookmarkID int) (string, error) {
+func (svc *BookmarkService) GetText(bookmarkID int) (string, error) {
 	params := url.Values{}
 	params.Set("bookmark_id", strconv.Itoa(bookmarkID))
 	res, err := svc.Client.Call("/bookmarks/get_text", params)
@@ -148,7 +134,7 @@ func (svc *BookmarkServiceOp) GetText(bookmarkID int) (string, error) {
 }
 
 // Star stars the specified bookmark
-func (svc *BookmarkServiceOp) Star(bookmarkID int) error {
+func (svc *BookmarkService) Star(bookmarkID int) error {
 	params := url.Values{}
 	params.Set("bookmark_id", strconv.Itoa(bookmarkID))
 	_, err := svc.Client.Call("/bookmarks/star", params)
@@ -156,7 +142,7 @@ func (svc *BookmarkServiceOp) Star(bookmarkID int) error {
 }
 
 // UnStar un-stars the specified bookmark
-func (svc *BookmarkServiceOp) UnStar(bookmarkID int) error {
+func (svc *BookmarkService) UnStar(bookmarkID int) error {
 	params := url.Values{}
 	params.Set("bookmark_id", strconv.Itoa(bookmarkID))
 	_, err := svc.Client.Call("/bookmarks/unstar", params)
@@ -164,7 +150,7 @@ func (svc *BookmarkServiceOp) UnStar(bookmarkID int) error {
 }
 
 // Archive archives the specified bookmark
-func (svc *BookmarkServiceOp) Archive(bookmarkID int) error {
+func (svc *BookmarkService) Archive(bookmarkID int) error {
 	params := url.Values{}
 	params.Set("bookmark_id", strconv.Itoa(bookmarkID))
 	_, err := svc.Client.Call("/bookmarks/archive", params)
@@ -172,7 +158,7 @@ func (svc *BookmarkServiceOp) Archive(bookmarkID int) error {
 }
 
 // UnArchive un-archives the specified bookmark
-func (svc *BookmarkServiceOp) UnArchive(bookmarkID int) error {
+func (svc *BookmarkService) UnArchive(bookmarkID int) error {
 	params := url.Values{}
 	params.Set("bookmark_id", strconv.Itoa(bookmarkID))
 	_, err := svc.Client.Call("/bookmarks/unarchive", params)
@@ -180,7 +166,7 @@ func (svc *BookmarkServiceOp) UnArchive(bookmarkID int) error {
 }
 
 // DeletePermanently PERMANENTLY deletes the specified bookmark
-func (svc *BookmarkServiceOp) DeletePermanently(bookmarkID int) error {
+func (svc *BookmarkService) DeletePermanently(bookmarkID int) error {
 	params := url.Values{}
 	params.Set("bookmark_id", strconv.Itoa(bookmarkID))
 	_, err := svc.Client.Call("/bookmarks/delete", params)
@@ -188,7 +174,7 @@ func (svc *BookmarkServiceOp) DeletePermanently(bookmarkID int) error {
 }
 
 // Move moves the specified bookmark to the specified folder
-func (svc *BookmarkServiceOp) Move(bookmarkID int, folderID string) error {
+func (svc *BookmarkService) Move(bookmarkID int, folderID string) error {
 	params := url.Values{}
 	params.Set("bookmark_id", strconv.Itoa(bookmarkID))
 	params.Set("folder_id", folderID)
@@ -199,7 +185,7 @@ func (svc *BookmarkServiceOp) Move(bookmarkID int, folderID string) error {
 // UpdateReadProgress updates the read progress on the bookmark
 // progress is between 0.0 and 1.0 - a percentage
 // when - Unix timestamp - optionally specify when the update happened. If it's set to 0 the current timestamp is used.
-func (svc *BookmarkServiceOp) UpdateReadProgress(bookmarkID int, progress float32, when int64) error {
+func (svc *BookmarkService) UpdateReadProgress(bookmarkID int, progress float32, when int64) error {
 	if when == 0 {
 		when = time.Now().Unix()
 	}
@@ -212,7 +198,7 @@ func (svc *BookmarkServiceOp) UpdateReadProgress(bookmarkID int, progress float3
 }
 
 // Add adds a new bookmark from the specified URL
-func (svc *BookmarkServiceOp) Add(p BookmarkAddRequestParams) (*Bookmark, error) {
+func (svc *BookmarkService) Add(p BookmarkAddRequestParams) (*Bookmark, error) {
 	params := url.Values{}
 	params.Set("url", p.URL)
 	if p.Description != "" {

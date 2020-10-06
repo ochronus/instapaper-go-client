@@ -40,7 +40,7 @@ func TestWithoutAuthentication(t *testing.T) {
 	client.Credentials = nil
 	mux.HandleFunc("/bookmarks/list", func(w http.ResponseWriter, r *http.Request) {
 	})
-	svc := BookmarkServiceOp{
+	svc := BookmarkService{
 		Client: client,
 	}
 	_, err := svc.List(DefaultBookmarkListRequestParams)
@@ -59,7 +59,7 @@ func TestBogusValidResponse(t *testing.T) {
 		}
 		fmt.Fprint(w, rawResponse)
 	})
-	svc := BookmarkServiceOp{
+	svc := BookmarkService{
 		Client: client,
 	}
 	bookmarkList, err := svc.List(DefaultBookmarkListRequestParams)
@@ -80,7 +80,7 @@ func TestInvalidResponse(t *testing.T) {
 	mux.HandleFunc("/bookmarks/list", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, rawResponse)
 	})
-	svc := BookmarkServiceOp{
+	svc := BookmarkService{
 		Client: client,
 	}
 	bookmarkList, err := svc.List(DefaultBookmarkListRequestParams)
@@ -100,7 +100,7 @@ func TestNot200OKResponse(t *testing.T) {
 	mux.HandleFunc("/bookmarks/list", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	})
-	svc := BookmarkServiceOp{
+	svc := BookmarkService{
 		Client: client,
 	}
 	bookmarkList, err := svc.List(DefaultBookmarkListRequestParams)
@@ -185,7 +185,7 @@ func TestValidResponse(t *testing.T) {
 		}
 		fmt.Fprint(w, rawResponse)
 	})
-	svc := BookmarkServiceOp{
+	svc := BookmarkService{
 		Client: client,
 	}
 	bookmarkList, err := svc.List(DefaultBookmarkListRequestParams)
