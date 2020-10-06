@@ -24,9 +24,10 @@ func setup() {
 	mux = http.NewServeMux()
 	server = httptest.NewServer(mux)
 
-	client, _ = NewClient("", "", "", "")
+	client, _ = NewClient("client_id", "client_secret", "username", "password")
 	client.BaseURL = server.URL
 	client.Credentials = defaultCredentials
+	client.OAuthClient.TokenRequestURI = server.URL + "/oauth/access_token"
 }
 
 func teardown() {
