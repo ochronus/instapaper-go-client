@@ -2,8 +2,7 @@ package instapaper
 
 import (
 	"encoding/json"
-
-	"github.com/gomodule/oauth1/oauth"
+	"io/ioutil"
 )
 
 // Folder represents a folder on Instapaper - there are 3 default ones, see FolderIDUnread, FolderIDStarred and FolderIDArchive
@@ -31,20 +30,33 @@ type folderService interface {
 
 // FolderServiceOp encapsulates all folder operations
 type FolderServiceOp struct {
-	Client      oauth.Client
-	Credentials *oauth.Credentials
+	Client Client
 }
 
 // List returns the list of *custom created* folders. It does not return any of the built in ones!
 func (svc *FolderServiceOp) List() ([]Folder, error) {
-	res, err := svc.Client.Post(nil, svc.Credentials, "https://www.instapaper.com/api/1.1/folders/list", nil)
-	if err == nil {
-		var folderList []Folder
-		err := json.NewDecoder(res.Body).Decode(&folderList)
-		if err != nil {
-			return nil, err
-		}
-		return folderList, nil
+	res, err := svc.Client.Call("/folders/list", nil)
+	if err != nil {
+		return nil, err
 	}
-	return nil, err
+	bodyBytes, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, &APIError{
+			StatusCode:   res.StatusCode,
+			Message:      err.Error(),
+			ErrorCode:    ErrHTTPError,
+			WrappedError: err,
+		}
+	}
+	var folderList []Folder
+	err = json.Unmarshal(bodyBytes, &folderList)
+	if err != nil {
+		return nil, &APIError{
+			StatusCode:   res.StatusCode,
+			Message:      err.Error(),
+			ErrorCode:    ErrUnmarshalError,
+			WrappedError: err,
+		}
+	}
+	return folderList, nil
 }
