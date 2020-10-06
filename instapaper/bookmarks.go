@@ -133,18 +133,18 @@ func (svc *BookmarkServiceOp) GetText(bookmarkID int) (string, error) {
 	res, err := svc.Client.Call("/bookmarks/get_text", params)
 	if err != nil {
 		return "", err
-	} else {
-		bodyBytes, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return "", &APIError{
-				StatusCode:   res.StatusCode,
-				Message:      err.Error(),
-				ErrorCode:    ErrHTTPError,
-				WrappedError: err,
-			}
-		}
-		return string(bodyBytes), nil
 	}
+	bodyBytes, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return "", &APIError{
+			StatusCode:   res.StatusCode,
+			Message:      err.Error(),
+			ErrorCode:    ErrHTTPError,
+			WrappedError: err,
+		}
+	}
+	return string(bodyBytes), nil
+
 }
 
 // Star stars the specified bookmark
