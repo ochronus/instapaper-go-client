@@ -56,7 +56,6 @@ func (svc *FolderService) List() ([]Folder, error) {
 			WrappedError: err,
 		}
 	}
-	fmt.Println(string(bodyBytes))
 	return folderList, nil
 }
 

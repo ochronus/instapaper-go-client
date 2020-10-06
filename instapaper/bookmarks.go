@@ -83,33 +83,31 @@ func (svc *BookmarkService) List(p BookmarkListRequestParams) (*BookmarkListResp
 	res, err := svc.Client.Call("/bookmarks/list", params)
 	if err != nil {
 		return &BookmarkListResponse{}, err
-	} else {
-		var bookmarkList BookmarkListResponse
-		bodyBytes, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return nil, &APIError{
+	}
+	var bookmarkList BookmarkListResponse
+	bodyBytes, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, &APIError{
+			StatusCode:   res.StatusCode,
+			Message:      err.Error(),
+			ErrorCode:    ErrHTTPError,
+			WrappedError: err,
+		}
+	}
+	bodyString := string(bodyBytes)
+	bookmarkList.RawResponse = bodyString
+	err = json.Unmarshal([]byte(bodyString), &bookmarkList)
+	if err != nil {
+		return &BookmarkListResponse{
+				RawResponse: bodyString,
+			}, &APIError{
 				StatusCode:   res.StatusCode,
 				Message:      err.Error(),
-				ErrorCode:    ErrHTTPError,
+				ErrorCode:    ErrUnmarshalError,
 				WrappedError: err,
 			}
-		}
-		bodyString := string(bodyBytes)
-		bookmarkList.RawResponse = bodyString
-		err = json.Unmarshal([]byte(bodyString), &bookmarkList)
-		if err != nil {
-			return &BookmarkListResponse{
-					RawResponse: bodyString,
-				}, &APIError{
-					StatusCode:   res.StatusCode,
-					Message:      err.Error(),
-					ErrorCode:    ErrUnmarshalError,
-					WrappedError: err,
-				}
-		}
-		return &bookmarkList, nil
 	}
-
+	return &bookmarkList, nil
 }
 
 // GetText returns the specified bookmark's processed text-view HTML, which is always text/html encoded as UTF-8.

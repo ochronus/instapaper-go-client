@@ -173,7 +173,7 @@ func TestValidResponse(t *testing.T) {
 				BookmarkID: 123456,
 				Text:       "That said, I do have some feelings on the matter.",
 				Note:       "",
-				Time:       1601797631,
+				Time:       "1601797631",
 				Position:   0,
 			},
 		},
