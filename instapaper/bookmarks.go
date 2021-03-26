@@ -87,6 +87,10 @@ func (svc *BookmarkService) List(p BookmarkListRequestParams) (*BookmarkListResp
 	}
 	params.Set("highlights", strings.Join(highlightList, "-"))
 
+	if p.Folder != "" {
+		params.Set("folder_id", p.Folder)
+	}
+
 	res, err := svc.Client.Call("/bookmarks/list", params)
 	if err != nil {
 		return &BookmarkListResponse{}, err
