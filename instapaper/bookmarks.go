@@ -36,6 +36,7 @@ type BookmarkListResponse struct {
 type BookmarkListRequestParams struct {
 	Limit           int
 	Skip            []Bookmark
+	SkipHighlights  []Highlight
 	CustomHaveParam string
 	Folder          string
 }
@@ -79,6 +80,12 @@ func (svc *BookmarkService) List(p BookmarkListRequestParams) (*BookmarkListResp
 		}
 		params.Set("have", strings.Join(haveList, ","))
 	}
+
+	var highlightList []string
+	for _, highlight := range p.SkipHighlights {
+		highlightList = append(highlightList, strconv.Itoa(highlight.ID))
+	}
+	params.Set("highlights", strings.Join(highlightList, "-"))
 
 	res, err := svc.Client.Call("/bookmarks/list", params)
 	if err != nil {
