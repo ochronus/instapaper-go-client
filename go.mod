@@ -4,7 +4,5 @@ go 1.15
 
 require (
 	github.com/gomodule/oauth1 v0.0.0-20181215000758-9a59ed3b0a84
-	github.com/nikhilm/gocco v0.0.0-20120406065426-84d2aea39070 // indirect
-	github.com/russross/blackfriday v1.5.2 // indirect
-	golang.org/x/net v0.0.0-20201002202402-0a1ea396d57c // indirect
+	golang.org/x/net v0.7.0 // indirect
 )
